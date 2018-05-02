@@ -71,7 +71,7 @@ namespace ReactiveDomain.Messaging
                 addedTypes.ForEach(t => fullNameToType[t.FullName] = t);
                 if (addedTypes.FirstOrDefault() != null)
                 {
-                    TypeTree.ResetTypeTree(addedTypes);
+                    TypeTree.AddToTypeTree(addedTypes);
                     MessageTypesAdded(null, null);
                 }
             }
@@ -147,13 +147,14 @@ namespace ReactiveDomain.Messaging
             BuildTypeTree(types);
         }
 
-        internal static void ResetTypeTree(List<Type> types)
+        internal static void AddToTypeTree(List<Type> types)
         {
             // Rebuild the type tree. Lock in case multiple overlapping resets are called.
             lock (_loadingLock)
             {
+                var typeList = types.Concat(_typeToNode.Keys).ToList();
                 _typeToNode = new Dictionary<Type, TypeTreeNode>();
-                BuildTypeTree(types);
+                BuildTypeTree(typeList);
             }
         }
 
