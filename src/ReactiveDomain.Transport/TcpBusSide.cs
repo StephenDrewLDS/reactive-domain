@@ -10,10 +10,9 @@ using ReactiveDomain.Logging;
 
 namespace ReactiveDomain.Transport
 {
-    public abstract class TcpBusSide : IHandle<Message>
+    public abstract class TcpBusSide : IHandle<Message>, IDisposable
     {
         protected static readonly ILogger Log = LogManager.GetLogger("ReactiveDomain");
-        protected readonly IDispatcher MessageBus;
         private List<Type> _inboundSpamMessageTypes;
         private QueuedHandlerDiscarding _inboundSpamMessageQueuedHandler;
         private QueuedHandler _inboundMessageQueuedHandler;
@@ -21,17 +20,33 @@ namespace ReactiveDomain.Transport
         protected List<ITcpConnection> TcpConnection = new List<ITcpConnection>();
         protected LengthPrefixMessageFramer Framer = new LengthPrefixMessageFramer();
 
+        [Obsolete("The dispatcher is not used")]
         protected TcpBusSide(
             IPAddress hostIp,
             int commandPort,
             IDispatcher messageBus)
         {
+        }
+
+        protected TcpBusSide(
+            IPAddress hostIp,
+            int commandPort)
+        {
             _hostIp = hostIp;
             _commandPort = commandPort;
-            MessageBus = messageBus;
             StatsTimer = new Timer(60000);             // getting the stats takes a while - only do it once a minute
             StatsTimer.Elapsed += _statsTimer_Elapsed;
             StatsTimer.Enabled = true;
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+
         }
 
         /// <summary>

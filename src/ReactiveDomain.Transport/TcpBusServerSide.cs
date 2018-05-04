@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Net;
-using ReactiveDomain.Transport.Framing;
 using ReactiveDomain.Messaging.Bus;
+using ReactiveDomain.Transport.Framing;
 
 namespace ReactiveDomain.Transport
 {
@@ -10,11 +10,18 @@ namespace ReactiveDomain.Transport
     {
         private readonly TcpServerListener _commandPortListener;
 
+        [Obsolete("The dispatcher is not used")]
         public TcpBusServerSide(
             IPAddress hostIp,
             int commandPort,
             IDispatcher messageBus)
-            : base(hostIp, commandPort, messageBus)
+            : this(hostIp, commandPort)
+        { }
+
+        public TcpBusServerSide(
+            IPAddress hostIp,
+            int commandPort)
+            : base(hostIp, commandPort)
         {
            
             Log.Info("ConfigureTcpListener(" + CommandEndpoint.AddressFamily + ", " + CommandEndpoint.Port + ") entered.");
@@ -47,6 +54,23 @@ namespace ReactiveDomain.Transport
             }, "Standard");
             Log.Info("ConfigureTcpListener(" + CommandEndpoint.AddressFamily + ", " + CommandEndpoint.Port + ") successfully constructed TcpServerListener.");
             _commandPortListener = listener;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            _commandPortListener.Stop();
+
+            foreach (var conn in TcpConnection)
+            {
+                try
+                {
+                    conn?.Close("Server shutting down");
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Error closing TCP connection {0}", ex.Message);
+                }
+            }
         }
     }
 }

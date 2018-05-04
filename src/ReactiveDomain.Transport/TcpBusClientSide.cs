@@ -9,18 +9,46 @@ using ReactiveDomain.Messaging.Bus;
 namespace ReactiveDomain.Transport
 {
     public class TcpBusClientSide : TcpBusSide
-
     {
+        private readonly bool _ownsConnection;
 
+        [Obsolete("The dispatcher is not used")]
         public TcpBusClientSide(
             IDispatcher messageBus,
             IPAddress hostIP,
             int commandPort,
             ITcpConnection tcpConnection = null)
-            : base(hostIP, commandPort, messageBus)
+            : this(hostIP, commandPort, tcpConnection)
         {
+        }
 
+        public TcpBusClientSide(
+            IPAddress hostIP,
+            int commandPort,
+            ITcpConnection tcpConnection = null)
+            : base(hostIP, commandPort)
+        {
+            _ownsConnection = tcpConnection == null;
             TcpConnection.Add(tcpConnection ?? CreateTcpConnection(CommandEndpoint));
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (_ownsConnection)
+            {
+                // Should only be one...
+                foreach (var conn in TcpConnection)
+                {
+                    try
+                    {
+                        conn?.Close("Client shutting down");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.Error("Error closing TCP connection {0}", ex.Message);
+                    }
+                }
+            }
         }
 
         private ITcpConnection CreateTcpConnection(IPEndPoint endPoint)
@@ -34,7 +62,7 @@ namespace ReactiveDomain.Transport
                 {
                     Log.Info("TcpBusClientSide.CreateTcpConnection(" + endPoint.Address + ":" + endPoint.Port + ") successfully constructed TcpConnection.");
 
-                    ConfigureTcpListener();
+                    ConfigureTcpConnection();
                 },
                 (conn, err) =>
                 {
@@ -56,7 +84,7 @@ namespace ReactiveDomain.Transport
         }
 
 
-        private void ConfigureTcpListener()
+        private void ConfigureTcpConnection()
         {
             Framer.RegisterMessageArrivedCallback(TcpMessageArrived);
             Action<ITcpConnection, IEnumerable<ArraySegment<byte>>> callback = null;
