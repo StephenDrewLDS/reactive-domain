@@ -23,12 +23,13 @@ namespace ReactiveDomain.Transport
 
             listener.StartListening((endPoint, socket) =>
             {
-               var conn = Transport.TcpConnection.CreateAcceptedTcpConnection(Guid.NewGuid(), endPoint, socket, verbose: true);
+                var conn = Transport.TcpConnection.CreateAcceptedTcpConnection(Guid.NewGuid(), endPoint, socket, verbose: true);
+
+                var framer = new LengthPrefixMessageFramer();
 
                 Action<ITcpConnection, IEnumerable<ArraySegment<byte>>> callback = null;
                 callback = (x, data) =>
                 {
-                    LengthPrefixMessageFramer framer = new LengthPrefixMessageFramer();
                     framer.RegisterMessageArrivedCallback(TcpMessageArrived);
                     try
                     {
