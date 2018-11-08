@@ -1,7 +1,7 @@
 ﻿namespace ReactiveDomain.Messaging
 {
-    public class CorrelatedMessage: Message
-    {
+    public class CorrelatedMessage: Message  {
+
         public CorrelationId CorrelationId { get; }
         public SourceId SourceId { get; }
 
@@ -14,10 +14,6 @@
             SourceId =  SourceId.NullSourceId();
         }
 
-        public static CorrelatedMessage NewRoot() {
-            return new CorrelatedMessage(CorrelationId.NewId());
-        }
+        public static CorrelatedMessage NewRoot() => new CorrelatedMessage(CorrelationId.NewId());
     }
-
-    
 }

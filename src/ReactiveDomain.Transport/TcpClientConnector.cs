@@ -33,7 +33,7 @@ namespace ReactiveDomain.Transport
         }
 
         public ITcpConnection ConnectTo(Guid connectionId,
-                                        IPEndPoint remoteEndPoint,
+                                        EndPoint remoteEndPoint,
                                         TimeSpan connectionTimeout,
                                         Action<ITcpConnection> onConnectionEstablished = null,
                                         Action<ITcpConnection, SocketError> onConnectionFailed = null,
@@ -66,11 +66,11 @@ namespace ReactiveDomain.Transport
                                   TimeSpan connectionTimeout)
         {
             if (serverEndPoint == null)
-                throw new ArgumentNullException("serverEndPoint");
+                throw new ArgumentNullException(nameof(serverEndPoint));
             if (onConnectionEstablished == null)
-                throw new ArgumentNullException("onConnectionEstablished");
+                throw new ArgumentNullException(nameof(onConnectionEstablished));
             if (onConnectionFailed == null)
-                throw new ArgumentNullException("onConnectionFailed");
+                throw new ArgumentNullException(nameof(onConnectionFailed));
 
             var socketArgs = _connectSocketArgsPool.Get();
             var connectingSocket = new Socket(serverEndPoint.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
@@ -122,7 +122,7 @@ namespace ReactiveDomain.Transport
             _connectSocketArgsPool.Return(socketArgs);
 
             if (RemoveFromConnecting(pendingConnection))
-                onConnectionFailed((IPEndPoint)serverEndPoint, socketError);
+                onConnectionFailed(serverEndPoint, socketError);
         }
 
         private void OnSocketConnected(SocketAsyncEventArgs socketArgs)
@@ -165,8 +165,8 @@ namespace ReactiveDomain.Transport
 
         private class CallbacksStateToken
         {
-            public Action<IPEndPoint, Socket> OnConnectionEstablished;
-            public Action<IPEndPoint, SocketError> OnConnectionFailed;
+            public Action<EndPoint, Socket> OnConnectionEstablished;
+            public Action<EndPoint, SocketError> OnConnectionFailed;
             public PendingConnection PendingConnection;
 
             public void Reset()

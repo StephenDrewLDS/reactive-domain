@@ -73,11 +73,11 @@ namespace ReactiveDomain.Messaging.Bus {
                 messageTypes = new[] {handler.MessageType};
             }
             for (var i = 0; i < messageTypes.Length; i++) {
-                Subcribe(handler, messageTypes[i]);
+                Subscribe(handler, messageTypes[i]);
             }
         }
 
-        private void Subcribe(IMessageHandler handler, Type messageType) {
+        private void Subscribe(IMessageHandler handler, Type messageType) {
             var handlers = GetHandlesFor(messageType);
             if (!handlers.Any(hndl => hndl.IsSame(messageType, handler))) {
                 lock (_handlers) {
